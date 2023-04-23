@@ -17,6 +17,8 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
+var players_data = {}
+
 io.on('connection', (socket) => {
   console.log('a user connected');
   socket.on('disconnect', () => {
@@ -24,6 +26,8 @@ io.on('connection', (socket) => {
   });
   socket.on('player_update', (data) => {
     console.log(data)
+    players_data[data.playerID] = data
+    io.emit('all_players_update', players_data);
   })
 });
 
