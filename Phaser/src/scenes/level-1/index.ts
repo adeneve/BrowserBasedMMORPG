@@ -15,7 +15,7 @@ export class Level1 extends Scene {
     super('level-1-scene');
   }
   create(): void {
-    this.player = new Player(this, 24, 28);
+    this.player = new Player(this, 200, 28);
     this.otherPlayersData = new Map();
     this.otherPlayers = new Map();
     this.socketIP = "192.168.1.75:3000";
@@ -24,10 +24,10 @@ export class Level1 extends Scene {
     });
     let self = this
     this.socket.on('all_players_update', function (data: Object) {
-      console.log("received data from socket server: \n")
+     // console.log("received data from socket server: \n")
       let localdata = new Map<string, any>(Object.entries(data))
       if (localdata) {
-        console.log(localdata)
+      //  console.log(localdata)
         if (localdata.has(self.player.playerID))
           localdata.delete(self.player.playerID)
         self.TryUpdateOtherPlayersData(localdata)

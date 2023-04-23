@@ -13,5 +13,7 @@ export class LoadingScene extends Scene {
   preload(): void {
     this.load.baseURL = 'assets/';
     this.load.image('player', 'sprites/maleBase.png');
+    this.load.image('arrowKey', 'sprites/ArrowKey.png');
+
   }
 }
