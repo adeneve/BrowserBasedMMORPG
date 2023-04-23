@@ -1,3 +1,4 @@
+import { getuid } from 'process';
 import { Actor } from './actor';
 export class Player extends Actor {
     private keyW: Phaser.Input.Keyboard.Key;
@@ -5,6 +6,7 @@ export class Player extends Actor {
     private keyS: Phaser.Input.Keyboard.Key;
     private keyD: Phaser.Input.Keyboard.Key;
     private velocity: number;
+    public playerID: string;
     constructor(scene: Phaser.Scene, x: number, y: number) {
         super(scene, x, y, 'player');
         if (this.scene?.input?.keyboard == null)
@@ -19,6 +21,8 @@ export class Player extends Actor {
         this.getBody().setOffset(8, 0);
         this.setScale(3, 3)
         this.velocity = 150
+        this.playerID = crypto.randomUUID();
+        console.log('playerID: %s', this.playerID)
     }
     update(): void {
         if (this.body == null)
