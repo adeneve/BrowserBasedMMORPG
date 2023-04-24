@@ -53,7 +53,7 @@ export class Level1 extends Scene {
       this.otherPlayers.forEach(op => op.update())
     // limit socket emits to 30fps to lower network overhead
     this.emitflipflop = !this.emitflipflop;
-    if (this.emitflipflop)
+    if (this.emitflipflop && !this.playerIdle())
       this.socket.emit('player_update', { "playerID": this.player.playerID, "x": this.player.x, "y": this.player.y })
   }
 
@@ -79,11 +79,18 @@ export class Level1 extends Scene {
       let localKey = localKeys.next()
       while (!localKey.done) {
         if (!(localKey.value in dataKeys)) {
+          this.otherPlayers.get(localKey.value)?.destroy()
           this.otherPlayers.delete(localKey.value)
+          console.log("deleted other idle player")
         }
         localKey = localKeys.next()
       }
     }
 
+  }
+
+  playerIdle()
+  {
+        return this.player.idleTimer > 15
   }
 }

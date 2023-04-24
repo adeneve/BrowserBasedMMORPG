@@ -9,6 +9,8 @@ export class Player extends Actor {
     private isMobile!: boolean;
     private velocity: number;
     public playerID: string;
+    private mobileMoveState!: number;
+    public idleTimer!: number;
     constructor(scene: Phaser.Scene, x: number, y: number) {
         super(scene, x, y, 'player');
         this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
@@ -19,7 +21,10 @@ export class Player extends Actor {
             this.keyS = this.scene.input.keyboard.addKey('S');
             this.keyD = this.scene.input.keyboard.addKey('D');
         }
+        this.idleTimer = 0
 
+        let self = this
+        this.mobileMoveState = 0
         //#region mobile virtual control pad setup
         if (this.isMobile) {
             var virtualKeyUp = new Physics.Arcade.Sprite(scene, 50, 50, 'arrowKey')
@@ -27,7 +32,13 @@ export class Player extends Actor {
             virtualKeyUp.y = scene.cameras.main.centerY + (.1 * scene.cameras.main.height)
             virtualKeyUp.x = scene.cameras.main.centerX / 3
             virtualKeyUp.setInteractive().
-                on('pointerdown', function () { console.log("up pressed") }, this)
+                on('pointerdown', function () { 
+                    if(self.body != null)
+                    {
+                        self.body.velocity.y = -self.velocity; 
+                        self.mobileMoveState = 1
+                    }
+                }, this)
             scene.add.existing(virtualKeyUp)
 
             var virtualKeyDown = new Physics.Arcade.Sprite(scene, 50, 50, 'arrowKey')
@@ -35,7 +46,13 @@ export class Player extends Actor {
             virtualKeyDown.y = scene.cameras.main.centerY + (.3 * scene.cameras.main.height)
             virtualKeyDown.x = scene.cameras.main.centerX / 3
             virtualKeyDown.setInteractive().
-                on('pointerdown', function () { console.log("down pressed") }, this)
+                on('pointerdown', function () { 
+                    if(self.body != null)
+                    {
+                        self.body.velocity.y = self.velocity; 
+                        self.mobileMoveState = 2
+                    }
+                }, this)           
             scene.add.existing(virtualKeyDown)
 
             var virtualKeyLeft = new Physics.Arcade.Sprite(scene, 50, 50, 'arrowKey')
@@ -44,7 +61,13 @@ export class Player extends Actor {
             virtualKeyLeft.y = scene.cameras.main.centerY + (.2 * scene.cameras.main.height)
             virtualKeyLeft.x = scene.cameras.main.centerX / 3 - (.07 * scene.cameras.main.width)
             virtualKeyLeft.setInteractive().
-                on('pointerdown', function () { console.log("left pressed") }, this)
+                on('pointerdown', function () { 
+                    if(self.body != null)
+                    {
+                        self.body.velocity.x = -self.velocity; 
+                        self.mobileMoveState = 3
+                    }
+                }, this)     
             scene.add.existing(virtualKeyLeft)
 
             var virtualKeyRight = new Physics.Arcade.Sprite(scene, 50, 50, 'arrowKey')
@@ -53,7 +76,14 @@ export class Player extends Actor {
             virtualKeyRight.y = scene.cameras.main.centerY + (.2 * scene.cameras.main.height)
             virtualKeyRight.x = scene.cameras.main.centerX / 3 + (.07 * scene.cameras.main.width)
             virtualKeyRight.setInteractive().
-                on('pointerdown', function () { console.log("right pressed") }, this)
+                on('pointerdown', function () { 
+                    if(self.body != null)
+                    {
+                        self.body.velocity.x = self.velocity; 
+                        self.mobileMoveState = 4
+                    }
+                }, this)
+            
             scene.add.existing(virtualKeyRight)
 
 
@@ -66,7 +96,8 @@ export class Player extends Actor {
         this.getBody().setOffset(8, 0);
         this.setScale(3, 3)
         this.velocity = 150
-        this.playerID = crypto.randomUUID();
+       // this.playerID = window.crypto.randomUUID(); temporarily disabled for testing
+       this.playerID = Math.random().toString() 
         console.log('playerID: %s', this.playerID)
     }
     update(): void {
@@ -75,8 +106,15 @@ export class Player extends Actor {
         this.getBody().setVelocity(0);
 
         if (this.isMobile) {
-            if (this.scene.input.activePointer.isDown) {
-                console.log(this.scene.input.activePointer)
+            if (!this.scene.input.activePointer.isDown) {
+                this.mobileMoveState = 0
+            }
+            switch(this.mobileMoveState){
+                case 0 : this.getBody().setVelocity(0); break;
+                case 1 : this.body.velocity.y = -this.velocity; break;
+                case 2 : this.body.velocity.y = this.velocity; break;
+                case 3 : this.body.velocity.x = -this.velocity; break;
+                case 4 : this.body.velocity.x = this.velocity; break;
             }
         }
         if (this.keyW?.isDown) {
@@ -112,6 +150,15 @@ export class Player extends Actor {
             this.body.velocity.x = newVelocity * horizontalScale
             this.body.velocity.y = newVelocity * verticalScale
         }
+
+        if(this.body.velocity.x == 0 && this.body.velocity.y == 0)
+        {
+            this.idleTimer += 1/60
+        }
+        else
+        {
+            this.idleTimer = 0
+        }
     }
     movingDiagonally() {
         if ((this.keyD?.isDown && this.keyS?.isDown) ||
@@ -126,5 +173,9 @@ export class Player extends Actor {
     upPressed() {
         console.log("up button pressed")
         return true;
+    }
+
+    resetIdle(){
+        this.idleTimer = 0
     }
 }
